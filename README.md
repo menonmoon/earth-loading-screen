@@ -17,7 +17,7 @@ languages. 969 image + caption pairs harvested from Wikipedia articles.
   (Wikipedia's night palette); swipe, tap, or arrow keys to move
 - Progress ring around the globe tracks the 6.5 s cycle; the loading word
   rotates through 12 languages
-- Music: "Monkeys Spinning Monkeys" by Kevin MacLeod (CC BY 3.0), plus a
+- Music: "Carefree" by Kevin MacLeod (CC BY 3.0), plus a
   ♪+ button to use your own audio file instead — it's stored only on your
   device, never uploaded. Long-press ♪+ to go back to the built-in track
 
@@ -33,7 +33,7 @@ For a *real* home-screen widget (Scriptable), see `WIDGET.md`.
 
 - `index.html` — the whole app
 - `figures.json` — the card feed (img, caption_html, caption, article, category)
-- `music.mp3` — Kevin MacLeod, "Monkeys Spinning Monkeys" (CC BY 3.0)
+- `music.mp3` — Kevin MacLeod, "Carefree" (CC BY 3.0)
 - `globe.jpg` — Blue Marble thumbnail (NASA / Wikimedia Commons)
 - `widget.js` / `WIDGET.md` — Scriptable widget + setup
 - `sw.js`, `manifest.webmanifest`, `icon-*.png` — PWA plumbing
