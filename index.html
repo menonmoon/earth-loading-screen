@@ -2,258 +2,146 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Earth</title>
-<meta name="description" content="A rotating Earth loading screen. Add it to your home screen and it runs like an app.">
-<meta name="theme-color" content="#01030a">
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.webmanifest">
-
-<!-- iOS home screen app -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Earth">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-
+<link rel="icon" type="image/png" href="icon-192.png">
 <style>
-  :root{
-    --bg:#01030a;
-    --cyan:#5ee7ff;
-    --blue:#3d8bff;
-    --dim:#7d8ea8;
-  }
-  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; }
-  body{
-    background:var(--bg);
-    color:#eaf6ff;
-    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:space-between;
-    padding:calc(env(safe-area-inset-top, 0px) + 28px) 24px calc(env(safe-area-inset-bottom, 0px) + 26px);
-    user-select:none;
-    -webkit-user-select:none;
-    touch-action:manipulation;
+  :root { --ink:#202122; --link:#3366cc; --border:#c8ccd1; --thumb-bg:#f8f9fa; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body {
+    background:#ffffff; color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100dvh; padding:24px 18px 84px;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none; -webkit-user-select:none;
     cursor:pointer;
   }
-
-  /* ---------- starfield (box-shadows injected by JS) ---------- */
-  .stars{ position:fixed; width:2px; height:2px; border-radius:50%; background:transparent; top:0; left:0; pointer-events:none; }
-  .stars.small{ width:1px; height:1px; animation:twinkle 3.4s ease-in-out infinite alternate; }
-  .stars.big{ animation:twinkle 5.2s ease-in-out infinite alternate; }
-  @keyframes twinkle{ from{ opacity:.45; } to{ opacity:1; } }
-
-  .nebula{
-    position:fixed; inset:0; pointer-events:none;
-    background:
-      radial-gradient(60vmax 40vmax at 15% 10%, rgba(38,84,180,.16), transparent 60%),
-      radial-gradient(50vmax 36vmax at 85% 80%, rgba(20,120,140,.12), transparent 60%),
-      radial-gradient(120vmax 90vmax at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%);
+  figure.thumb {
+    border:1px solid var(--border); background:var(--thumb-bg);
+    padding:4px; width:min(86vw, 342px);
+    transition:opacity .35s ease;
   }
-
-  /* ---------- header ---------- */
-  header{ text-align:center; z-index:2; }
-  .brand{
-    font-size:12px; letter-spacing:.55em; text-indent:.55em;
-    color:var(--dim); font-weight:600; text-transform:uppercase;
+  figure.thumb.fading { opacity:0; }
+  figure.thumb img.photo {
+    display:block; width:100%; height:auto; max-height:46vh; object-fit:cover;
+    border:1px solid var(--border); background:#eaecf0;
+    transition:opacity .3s ease;
   }
-  .brand b{ color:var(--cyan); font-weight:600; }
-
-  /* ---------- earth stage ---------- */
-  .stage{
-    position:relative;
-    width:min(66vmin, 360px);
-    height:min(66vmin, 360px);
-    display:flex; align-items:center; justify-content:center;
-    z-index:2;
+  body.is-loading figure.thumb img.photo { opacity:.45; }
+  figcaption {
+    padding:5px 2px 1px; font-size:13.5px; line-height:1.45; color:var(--ink);
+    overflow-wrap:break-word;
   }
-  .orbit{
-    position:absolute; inset:-9%;
-    border:1px dashed rgba(110,200,255,.30);
-    border-radius:50%;
-    animation:spin 26s linear infinite;
+  figcaption a { color:var(--link); text-decoration:none; }
+  figcaption .magnify { float:right; margin:2px 0 0 6px; opacity:.55; }
+  .loading-mark {
+    position:fixed; left:16px; bottom:calc(14px + env(safe-area-inset-bottom));
+    display:flex; align-items:center; gap:8px; z-index:5; pointer-events:none;
   }
-  .orbit::before{
-    content:""; position:absolute; top:6%; left:12%;
-    width:7px; height:7px; border-radius:50%;
-    background:var(--cyan);
-    box-shadow:0 0 10px 2px rgba(94,231,255,.8);
+  .loading-mark img { width:30px; height:30px; border-radius:50%; display:block; }
+  .loading-mark span {
+    font-family:"Linux Libertine", "Hoefler Text", Georgia, "Times New Roman", serif;
+    font-style:italic; font-size:17px; color:var(--link);
   }
-  .orbit.two{
-    inset:-17%;
-    border-color:rgba(110,200,255,.13);
-    animation-duration:48s; animation-direction:reverse;
+  body.is-loading .loading-mark span { animation:pulse .9s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  .credit {
+    position:fixed; right:14px; bottom:calc(17px + env(safe-area-inset-bottom));
+    font-size:10.5px; color:#72777d; z-index:5;
   }
-  .orbit.two::before{
-    width:4px; height:4px; top:auto; left:auto; bottom:10%; right:14%;
-    background:#a9c6ff; box-shadow:0 0 8px 1px rgba(169,198,255,.7);
-  }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-
-  .earth{
-    position:relative;
-    width:100%; height:100%;
-    border-radius:50%;
-    overflow:hidden;
-    background:#0a2a5e;
-    box-shadow:
-      0 0 42px rgba(61,139,255,.45),
-      0 0 130px rgba(61,139,255,.20),
-      inset 0 0 0 1px rgba(140,210,255,.25);
-  }
-  .strip{
-    position:absolute; top:0; left:0;
-    width:400%; height:100%;
-    background-image:url("earth.jpg");
-    background-repeat:repeat-x;
-    background-size:50% 100%;
-    animation:slide 42s linear infinite;
-    will-change:transform;
-  }
-  @keyframes slide{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
-  .shade{
-    position:absolute; inset:0; border-radius:50%;
-    background:radial-gradient(circle at 34% 30%, rgba(255,255,255,.14) 0%, transparent 42%, rgba(1,4,16,.38) 74%, rgba(0,1,8,.88) 100%);
-    box-shadow:
-      inset -26px -16px 46px rgba(0,0,10,.75),
-      inset 10px 10px 26px rgba(150,200,255,.16);
-  }
-
-  /* ---------- loading UI ---------- */
-  .loader{ width:min(78vw, 340px); text-align:center; z-index:2; }
-  .pct{
-    font-size:64px; font-weight:200; letter-spacing:.02em; line-height:1;
-    font-variant-numeric:tabular-nums;
-  }
-  .pct span{ font-size:26px; color:var(--cyan); font-weight:300; margin-left:2px; }
-  .status{
-    margin-top:10px;
-    font-size:11px; letter-spacing:.42em; text-indent:.42em;
-    color:var(--dim); text-transform:uppercase; font-weight:600;
-    min-height:14px;
-  }
-  .status.online{ color:#52ffa8; }
-  .bar{
-    margin-top:18px; height:3px; border-radius:99px;
-    background:rgba(125,160,220,.18);
-    overflow:hidden;
-  }
-  .bar i{
-    display:block; height:100%; width:0%;
-    border-radius:99px;
-    background:linear-gradient(90deg, var(--blue), var(--cyan));
-    box-shadow:0 0 12px rgba(94,231,255,.75);
-    transition:width .18s ease-out;
-  }
-  footer{
-    font-size:9px; letter-spacing:.4em; text-indent:.4em;
-    color:rgba(125,142,168,.55); text-transform:uppercase; z-index:2;
-  }
+  .credit a { color:#72777d; text-decoration:none; }
 </style>
 </head>
 <body>
+  <figure class="thumb" id="card">
+    <img class="photo" id="photo" alt="">
+    <figcaption id="caption"></figcaption>
+  </figure>
 
-<div class="nebula"></div>
-<div class="stars small" id="stars1"></div>
-<div class="stars big" id="stars2"></div>
-
-<header>
-  <div class="brand">Terra<b>·</b>OS</div>
-</header>
-
-<main class="stage" aria-label="Rotating Earth">
-  <div class="orbit two"></div>
-  <div class="orbit"></div>
-  <div class="earth">
-    <div class="strip"></div>
-    <div class="shade"></div>
+  <div class="loading-mark" aria-hidden="true">
+    <img src="globe.jpg" alt="">
+    <span id="loadword">Loading…</span>
   </div>
-</main>
-
-<section class="loader">
-  <div class="pct"><span id="pct" style="font-size:64px;color:#eaf6ff;font-weight:200;">0</span><span>%</span></div>
-  <div class="status" id="status">Establishing uplink</div>
-  <div class="bar"><i id="fill"></i></div>
-</section>
-
-<footer>Tap to reinitialize</footer>
+  <div class="credit">Images &amp; captions · <a href="https://en.wikipedia.org/wiki/Earth">Wikipedia</a></div>
 
 <script>
-  // ----- starfield -----
-  function starShadows(count, spread){
-    var out = [];
-    for (var i = 0; i < count; i++){
-      var x = Math.round(Math.random() * spread);
-      var y = Math.round(Math.random() * spread);
-      var a = (0.25 + Math.random() * 0.75).toFixed(2);
-      out.push(x + "px " + y + "px 0 0 rgba(210,235,255," + a + ")");
+  var WORDS = ["Loading","Laden","Chargement","Cargando","Caricamento","Carregando","Загрузка","読み込み中","로딩 중","加载中","تحميل","Ładowanie"];
+  var card = document.getElementById('card');
+  var photo = document.getElementById('photo');
+  var caption = document.getElementById('caption');
+  var loadword = document.getElementById('loadword');
+  var MAGNIFY = '<span class="magnify"><svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="#54595d" stroke-width="1.2"><rect x="4" y="0.5" width="10.5" height="10"/><path d="M0.5 3.5 H4 M0.5 7.5 H4 M0.5 3.5 V7.5"/></svg></span>';
+  var items = [], order = [], pos = 0, timer = null, wi = 0;
+
+  function fixLinks(html) {
+    return html
+      .replace(/href="\/wiki\//g, 'href="https://en.wikipedia.org/wiki/')
+      .replace(/href="\/w\//g, 'href="https://en.wikipedia.org/w/')
+      .replace(/<a /g, '<a target="_blank" rel="noopener" ');
+  }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return out.join(",");
+    return a;
   }
-  var spread = Math.max(window.innerWidth, window.innerHeight) * 1.6;
-  document.getElementById("stars1").style.boxShadow = starShadows(140, spread);
-  document.getElementById("stars2").style.boxShadow = starShadows(50, spread);
+  function current() { return items[order[pos % order.length]]; }
+  function upcoming() { return items[order[(pos + 1) % order.length]]; }
+  function render(item) {
+    photo.src = item.img;
+    photo.alt = item.caption || '';
+    caption.innerHTML = MAGNIFY + fixLinks(item.caption_html);
+  }
+  function preload(item) { var im = new Image(); im.src = item.img; }
 
-  // ----- loading sequence -----
-  var pctEl = document.getElementById("pct");
-  var fillEl = document.getElementById("fill");
-  var statusEl = document.getElementById("status");
-  var stages = [
-    [0,  "Establishing uplink"],
-    [18, "Calibrating orbit"],
-    [38, "Syncing satellites"],
-    [57, "Charging solar arrays"],
-    [76, "Rendering atmosphere"],
-    [92, "Finalizing trajectory"],
-    [100,"Systems online"]
-  ];
-  var progress = 0, timer = null, holdTimer = null;
+  function advance() {
+    if (!items.length) return;
+    document.body.classList.add('is-loading');
+    wi = (wi + 1) % WORDS.length;
+    loadword.textContent = WORDS[wi] + '…';
+    card.classList.add('fading');
+    setTimeout(function () {
+      pos++;
+      if (pos % order.length === 0) { order = shuffle(order.slice()); pos = 0; }
+      render(current());
+      preload(upcoming());
+      card.classList.remove('fading');
+      setTimeout(function () { document.body.classList.remove('is-loading'); }, 350);
+    }, 380);
+    restart();
+  }
+  function restart() { clearInterval(timer); timer = setInterval(advance, 5200); }
 
-  function stageFor(p){
-    var label = stages[0][1];
-    for (var i = 0; i < stages.length; i++){ if (p >= stages[i][0]) label = stages[i][1]; }
-    return label;
-  }
-  function render(){
-    pctEl.textContent = Math.floor(progress);
-    fillEl.style.width = progress + "%";
-    var online = progress >= 100;
-    statusEl.textContent = stageFor(progress);
-    statusEl.classList.toggle("online", online);
-  }
-  function tick(){
-    // realistic loading feel: uneven steps, occasional stalls, slow finish
-    var step = Math.random() * 2.1 + 0.35;
-    if (progress > 82) step *= 0.45;
-    if (Math.random() < 0.07) step = 0; // stall
-    progress = Math.min(100, progress + step);
-    render();
-    if (progress >= 100){
-      clearInterval(timer); timer = null;
-      holdTimer = setTimeout(restart, 4200); // hold on "online", then loop
+  fetch('figures.json').then(function (r) { return r.json(); }).then(function (data) {
+    items = data;
+    order = shuffle(items.map(function (_, i) { return i; }));
+    var p = -1;
+    for (var i = 0; i < items.length; i++) {
+      if ((items[i].caption || '').indexOf('brown pelican') !== -1) { p = i; break; }
     }
-  }
-  function restart(){
-    clearTimeout(holdTimer);
-    if (timer) clearInterval(timer);
-    progress = 0; render();
-    timer = setInterval(tick, 95);
-  }
-  document.body.addEventListener("click", restart);
-  restart();
+    if (p > 0) { order = [p].concat(order.filter(function (x) { return x !== p; })); }
+    render(current());
+    preload(upcoming());
+    restart();
+  }).catch(function () {
+    caption.textContent = 'Could not load images. Check your connection and tap to retry.';
+  });
 
-  // ----- service worker (offline + installable) -----
-  if ("serviceWorker" in navigator){
-    window.addEventListener("load", function(){
-      navigator.serviceWorker.register("sw.js").catch(function(){});
-    });
-  }
+  document.body.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('a')) return;
+    advance();
+  });
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
