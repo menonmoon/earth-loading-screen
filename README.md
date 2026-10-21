@@ -17,7 +17,7 @@ languages. 969 image + caption pairs harvested from Wikipedia articles.
   (Wikipedia's night palette); swipe, tap, or arrow keys to move
 - Progress ring around the globe tracks the 6.5 s cycle; the loading word
   rotates through 12 languages
-- Music: "Carefree" by Kevin MacLeod (CC BY 3.0), plus a
+- Music: an obscure bossa nova by Freesound user Migfus20 (CC BY 4.0), plus a
   ♪+ button to use your own audio file instead — it's stored only on your
   device, never uploaded. Long-press ♪+ to go back to the built-in track
 
@@ -33,7 +33,7 @@ For a *real* home-screen widget (Scriptable), see `WIDGET.md`.
 
 - `index.html` — the whole app
 - `figures.json` — the card feed (img, caption_html, caption, article, category)
-- `music.mp3` — Kevin MacLeod, "Carefree" (CC BY 3.0)
+- `music.mp3` — Migfus20, bossa nova background music (CC BY 4.0, via Freesound/Wikimedia Commons)
 - `globe.jpg` — Blue Marble thumbnail (NASA / Wikimedia Commons)
 - `widget.js` / `WIDGET.md` — Scriptable widget + setup
 - `sw.js`, `manifest.webmanifest`, `icon-*.png` — PWA plumbing
@@ -42,7 +42,7 @@ For a *real* home-screen widget (Scriptable), see `WIDGET.md`.
 
 - Images and captions: Wikipedia / Wikimedia Commons; each card names and
   links its source article.
-- Music: Kevin MacLeod (incompetech.com), licensed CC BY 3.0.
+- Music: Migfus20 (Freesound), licensed CC BY 4.0.
 - The vibe: "Coloured Candles" by Tony Hymas (Bruton, 1979) — the sound
   from the original TikTok by banankaka. It's commercial library music, so
   it can't be bundled here; use the ♪+ button with your own copy.
