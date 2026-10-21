@@ -1,9 +1,9 @@
-const CACHE = 'earth-loading-v6';
+const CACHE = 'earth-loading-v7';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './figures.json?rev=4',
+  './figures.json?rev=5',
   './globe.jpg',
   './music.mp3',
   './icon-180.png',
