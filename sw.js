@@ -1,4 +1,4 @@
-const CACHE = 'earth-loading-v3';
+const CACHE = 'earth-loading-v4';
 const ASSETS = [
   './',
   './index.html',
