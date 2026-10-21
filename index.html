@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -13,42 +13,81 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>
-  :root { --ink:#202122; --link:#3366cc; --border:#c8ccd1; --thumb-bg:#f8f9fa; }
+  :root, html[data-theme="light"] {
+    --bg:#ffffff; --ink:#202122; --link:#3366cc; --border:#c8ccd1;
+    --thumb-bg:#f8f9fa; --ph:#eaecf0; --sub:#72777d; --chip:#f8f9fa;
+    --btn-bg:#ffffff; --overlay:rgba(255,255,255,.97);
+  }
+  html[data-theme="dark"] {
+    --bg:#101418; --ink:#eaecf0; --link:#7aa5ff; --border:#454a50;
+    --thumb-bg:#1b1f24; --ph:#262b31; --sub:#a2a5a9; --chip:#1b1f24;
+    --btn-bg:#1b1f24; --overlay:rgba(16,20,24,.97);
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; }
   body {
-    background:#ffffff; color:var(--ink);
+    background:var(--bg); color:var(--ink);
     font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    min-height:100dvh; padding:24px 18px 84px;
+    min-height:100dvh; padding:64px 18px 128px;
     -webkit-tap-highlight-color:transparent;
     user-select:none; -webkit-user-select:none;
-    cursor:pointer;
+    transition:background .4s ease, color .4s ease;
+    overflow:hidden;
   }
+  /* category chips */
+  #chips {
+    position:fixed; top:calc(10px + env(safe-area-inset-top)); left:0; right:0;
+    display:flex; gap:6px; justify-content:flex-start; padding:2px 14px;
+    overflow-x:auto; scrollbar-width:none; z-index:7;
+  }
+  #chips::-webkit-scrollbar { display:none; }
+  .chip {
+    flex:0 0 auto; font-size:12px; padding:5px 11px; border-radius:999px;
+    border:1px solid var(--border); background:var(--chip); color:var(--ink);
+    cursor:pointer; font-family:inherit;
+  }
+  .chip.on { background:var(--link); border-color:var(--link); color:#fff; }
+  /* card */
   figure.thumb {
     border:1px solid var(--border); background:var(--thumb-bg);
     padding:4px; width:min(86vw, 342px);
+    box-shadow:0 1px 6px rgba(0,0,0,.05);
   }
   .photobox {
     position:relative; width:100%; aspect-ratio:4/3; overflow:hidden;
-    border:1px solid var(--border); background:#eaecf0;
+    border:1px solid var(--border); background:var(--ph);
   }
   .photobox img {
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-    opacity:0; transition:opacity .8s ease;
+    opacity:0; transition:opacity .85s ease;
   }
-  .photobox img.show { opacity:1; }
+  .photobox img.show { opacity:1; animation:kb 7.5s ease-out forwards; }
+  @keyframes kb { from { transform:scale(1); } to { transform:scale(1.07); } }
+  body.reduced .photobox img { transition:none; animation:none !important; }
   figcaption {
     padding:5px 2px 1px; font-size:13.5px; line-height:1.45; color:var(--ink);
-    overflow-wrap:break-word; transition:opacity .3s ease;
+    overflow-wrap:break-word; transition:opacity .3s ease; min-height:44px;
   }
   figcaption a { color:var(--link); text-decoration:none; }
   figcaption .magnify { float:right; margin:2px 0 0 6px; opacity:.55; }
+  #srcline { margin-top:9px; font-size:11px; color:var(--sub); text-align:center; }
+  #srcline a { color:var(--sub); }
+  /* loading mark */
   .loading-mark {
     position:fixed; left:16px; bottom:calc(14px + env(safe-area-inset-bottom));
     display:flex; align-items:center; gap:8px; z-index:5; pointer-events:none;
   }
-  .loading-mark img { width:30px; height:30px; border-radius:50%; display:block; }
+  .globe-wrap { position:relative; width:34px; height:34px; }
+  .globe-wrap img {
+    width:30px; height:30px; border-radius:50%; display:block;
+    position:absolute; left:2px; top:2px; animation:spin 46s linear infinite;
+  }
+  body.reduced .globe-wrap img { animation:none; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .globe-wrap svg { position:absolute; inset:0; transform:rotate(-90deg); }
+  .globe-wrap circle { fill:none; stroke:var(--link); stroke-width:2.4; }
+  .globe-wrap .track { stroke:var(--border); }
   .loading-mark span {
     font-family:"Linux Libertine", "Hoefler Text", Georgia, "Times New Roman", serif;
     font-style:italic; font-size:17px; color:var(--link);
@@ -57,19 +96,55 @@
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
   .credit {
     position:fixed; right:14px; bottom:calc(17px + env(safe-area-inset-bottom));
-    font-size:10.5px; color:#72777d; z-index:5;
+    font-size:10.5px; color:var(--sub); z-index:5; text-align:right; max-width:46vw;
   }
-  .credit a { color:#72777d; text-decoration:none; }
-  #musicBtn {
-    position:fixed; top:calc(12px + env(safe-area-inset-top)); right:12px; z-index:6;
-    width:38px; height:38px; border-radius:50%;
-    border:1px solid var(--border); background:#ffffff; color:#54595d;
-    font-size:17px; line-height:1; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  .credit a { color:var(--sub); text-decoration:none; }
+  /* toolbar */
+  #toolbar {
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:calc(58px + env(safe-area-inset-bottom));
+    display:flex; gap:9px; z-index:8;
   }
+  .tbtn {
+    width:42px; height:42px; border-radius:50%; position:relative;
+    border:1px solid var(--border); background:var(--btn-bg); color:var(--ink);
+    font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 5px rgba(0,0,0,.08); font-family:inherit;
+  }
+  .tbtn:active { transform:scale(.93); }
+  .tbtn .badge {
+    position:absolute; top:-4px; right:-4px; min-width:17px; height:17px;
+    border-radius:9px; background:#c33; color:#fff; font-size:10px;
+    display:none; align-items:center; justify-content:center; padding:0 4px;
+  }
+  .tbtn.faved { color:#c33; }
+  /* favorites overlay */
+  #favOverlay {
+    position:fixed; inset:0; background:var(--overlay); z-index:20;
+    display:none; flex-direction:column; padding:calc(16px + env(safe-area-inset-top)) 16px 16px;
+  }
+  #favOverlay.open { display:flex; }
+  #favOverlay header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  #favOverlay h2 { font-family:"Linux Libertine", Georgia, serif; font-weight:400; font-size:21px; }
+  #favGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; overflow-y:auto; }
+  .favcard { border:1px solid var(--border); background:var(--thumb-bg); padding:3px; cursor:pointer; }
+  .favcard img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+  .favcard p { font-size:11px; line-height:1.35; padding:4px 2px 2px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  #favEmpty { color:var(--sub); font-size:14px; text-align:center; margin-top:40px; }
+  /* toast */
+  #toast {
+    position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
+    bottom:calc(112px + env(safe-area-inset-bottom));
+    background:#202122; color:#fff; font-size:13px; padding:8px 14px; border-radius:999px;
+    opacity:0; pointer-events:none; transition:all .3s ease; z-index:30; max-width:86vw;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #toast.show { opacity:.94; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+  <nav id="chips" aria-label="Categories"></nav>
+
   <figure class="thumb" id="card">
     <div class="photobox">
       <img id="photoA" class="show" alt="">
@@ -77,25 +152,59 @@
     </div>
     <figcaption id="caption"></figcaption>
   </figure>
+  <div id="srcline"></div>
 
-  <button id="musicBtn" aria-label="Toggle music">🔇</button>
+  <div id="toolbar">
+    <button class="tbtn" id="prevBtn" aria-label="Previous">‹</button>
+    <button class="tbtn" id="nextBtn" aria-label="Next">›</button>
+    <button class="tbtn" id="favBtn" aria-label="Save this card">♥<span class="badge" id="favBadge"></span></button>
+    <button class="tbtn" id="favListBtn" aria-label="Saved cards">🔖</button>
+    <button class="tbtn" id="musicBtn" aria-label="Toggle music">🔇</button>
+    <button class="tbtn" id="customBtn" aria-label="Use your own music file">♪+</button>
+    <button class="tbtn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="tbtn" id="shareBtn" aria-label="Share this card">⤴</button>
+  </div>
 
   <div class="loading-mark" aria-hidden="true">
-    <img src="globe.jpg" alt="">
+    <div class="globe-wrap">
+      <img src="globe.jpg" alt="">
+      <svg width="34" height="34" viewBox="0 0 34 34">
+        <circle class="track" cx="17" cy="17" r="15.5"></circle>
+        <circle id="ring" cx="17" cy="17" r="15.5"></circle>
+      </svg>
+    </div>
     <span id="loadword">Loading…</span>
   </div>
-  <div class="credit">Images &amp; captions · <a href="https://en.wikipedia.org/wiki/Earth">Wikipedia</a></div>
+  <div class="credit">Images &amp; captions · <a href="https://en.wikipedia.org/wiki/Earth">Wikipedia</a><br>♪ Kevin MacLeod · <a href="https://creativecommons.org/licenses/by/3.0/">CC BY</a></div>
 
+  <div id="favOverlay">
+    <header><h2>Saved cards</h2><button class="tbtn" id="favClose">✕</button></header>
+    <div id="favGrid"></div>
+    <p id="favEmpty">Tap ♥ on any card to save it here.</p>
+  </div>
+
+  <div id="toast"></div>
+  <input type="file" id="filePicker" accept="audio/*" style="display:none">
   <audio id="bgm" src="music.mp3" loop preload="auto"></audio>
 
 <script>
   var WORDS = ["Loading","Laden","Chargement","Cargando","Caricamento","Carregando","Загрузка","読み込み中","로딩 중","加载中","تحميل","Ładowanie"];
+  var SLIDE_MS = 6500;
   var caption = document.getElementById('caption');
+  var srcline = document.getElementById('srcline');
   var loadword = document.getElementById('loadword');
+  var ring = document.getElementById('ring');
+  var RING_C = 2 * Math.PI * 15.5;
+  ring.style.strokeDasharray = RING_C;
+  ring.style.strokeDashoffset = RING_C;
   var layers = [document.getElementById('photoA'), document.getElementById('photoB')];
   var front = 0;
   var MAGNIFY = '<span class="magnify"><svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="#54595d" stroke-width="1.2"><rect x="4" y="0.5" width="10.5" height="10"/><path d="M0.5 3.5 H4 M0.5 7.5 H4 M0.5 3.5 V7.5"/></svg></span>';
-  var items = [], order = [], pos = 0, timer = null, wi = 0, busy = false;
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (REDUCED) document.body.classList.add('reduced');
+
+  var allItems = [], pool = [], order = [], pos = 0, cat = 'All';
+  var shownAt = 0, paused = false, capTimer = null;
 
   function fixLinks(html) {
     return html
@@ -110,101 +219,325 @@
     }
     return a;
   }
-  function itemAt(p) { return items[order[p % order.length]]; }
-  function preload(item) { var im = new Image(); im.src = item.img; }
+  function cur() { return allItems[pool[order[pos % order.length]]]; }
+  function at(p) { return allItems[pool[order[p % order.length]]]; }
+  function articleURL(item) { return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(item.article.replace(/ /g, '_')); }
+  function preload(item) { if (item) { var im = new Image(); im.src = item.img; } }
 
-  function setCaption(item) {
-    caption.style.opacity = '0';
-    setTimeout(function () {
-      caption.innerHTML = MAGNIFY + fixLinks(item.caption_html);
-      caption.style.opacity = '1';
-    }, 300);
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove('show'); }, 2200);
   }
 
-  function showItem(p, instant) {
-    var item = itemAt(p);
-    var back = layers[1 - front];
-    var frontEl = layers[front];
+  function render(item) {
+    var back = layers[1 - front], frontEl = layers[front];
     back.src = item.img;
     back.alt = item.caption || '';
     var swap = function () {
       back.classList.add('show');
       frontEl.classList.remove('show');
       front = 1 - front;
-      setCaption(item);
-      preload(itemAt(p + 1));
+      clearTimeout(capTimer);
+      caption.style.opacity = '0';
+      capTimer = setTimeout(function () {
+        caption.innerHTML = MAGNIFY + fixLinks(item.caption_html);
+        caption.style.opacity = '1';
+        srcline.innerHTML = 'From “<a target="_blank" rel="noopener" href="' + articleURL(item) + '">' +
+          item.article + '</a>” · ' + (pos + 1) + ' of ' + pool.length;
+        paintFavBtn();
+      }, REDUCED ? 0 : 320);
+      shownAt = performance.now();
+      preload(at(pos + 1));
+      preload(at(pos + 2));
     };
-    if (instant) { swap(); return; }
-    if (back.decode) {
-      back.decode().then(swap).catch(swap);
-    } else {
-      back.onload = swap;
-      back.onerror = swap;
-    }
+    if (REDUCED) { swap(); return; }
+    if (back.decode) { back.decode().then(swap).catch(swap); }
+    else { back.onload = swap; back.onerror = swap; }
   }
 
-  function advance() {
-    if (!items.length || busy) return;
-    busy = true;
+  function step(d) {
+    if (!pool.length) return;
+    pos += d;
+    if (pos >= order.length) { order = shuffle(order.slice()); pos = 0; }
+    if (pos < 0) pos = order.length - 1;
     document.body.classList.add('is-loading');
+    setTimeout(function () { document.body.classList.remove('is-loading'); }, 900);
+    render(cur());
+  }
+  function tick(now) {
+    if (!paused && pool.length) {
+      var el = now - shownAt;
+      ring.style.strokeDashoffset = RING_C * (1 - Math.min(el / SLIDE_MS, 1));
+      if (el >= SLIDE_MS) step(1);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* word cycler */
+  var wi = 0;
+  setInterval(function () {
     wi = (wi + 1) % WORDS.length;
     loadword.textContent = WORDS[wi] + '…';
-    pos++;
-    if (pos % order.length === 0) { order = shuffle(order.slice()); pos = 0; }
-    showItem(pos, false);
-    setTimeout(function () {
-      document.body.classList.remove('is-loading');
-      busy = false;
-    }, 900);
-    restart();
+  }, 1500);
+
+  /* categories */
+  function buildChips() {
+    var cats = ['All'];
+    allItems.forEach(function (it) { if (cats.indexOf(it.category) === -1) cats.push(it.category); });
+    var nav = document.getElementById('chips');
+    nav.innerHTML = '';
+    cats.forEach(function (c) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (c === cat ? ' on' : '');
+      b.textContent = c;
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setCategory(c);
+      });
+      nav.appendChild(b);
+    });
   }
-  function restart() { clearInterval(timer); timer = setInterval(advance, 6000); }
+  function setCategory(c) {
+    cat = c;
+    pool = [];
+    allItems.forEach(function (it, i) { if (c === 'All' || it.category === c) pool.push(i); });
+    order = shuffle(pool.map(function (_, i) { return i; }));
+    pos = 0;
+    buildChips();
+    render(cur());
+  }
 
-  fetch('figures.json?rev=3').then(function (r) { return r.json(); }).then(function (data) {
-    items = data;
-    order = shuffle(items.map(function (_, i) { return i; }));
-    var p = -1;
-    for (var i = 0; i < items.length; i++) {
-      if ((items[i].caption || '').indexOf('brown pelican') !== -1) { p = i; break; }
+  /* favorites */
+  function getFavs() {
+    try { return JSON.parse(localStorage.getItem('earth-favs-v1') || '[]'); }
+    catch (e) { return []; }
+  }
+  function setFavs(f) {
+    localStorage.setItem('earth-favs-v1', JSON.stringify(f));
+    var badge = document.getElementById('favBadge');
+    badge.textContent = f.length;
+    badge.style.display = f.length ? 'flex' : 'none';
+  }
+  function isFav(item) { return getFavs().some(function (f) { return f.img === item.img; }); }
+  function paintFavBtn() {
+    document.getElementById('favBtn').classList.toggle('faved', pool.length ? isFav(cur()) : false);
+  }
+  document.getElementById('favBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!pool.length) return;
+    var item = cur(), favs = getFavs();
+    if (isFav(item)) {
+      favs = favs.filter(function (f) { return f.img !== item.img; });
+      toast('Removed from saved');
+    } else {
+      favs.push({ img: item.img, caption: item.caption, article: item.article, caption_html: item.caption_html, category: item.category });
+      toast('Saved ♥');
     }
-    if (p > 0) { order = [p].concat(order.filter(function (x) { return x !== p; })); pos = 0; }
-    showItem(0, true);
-    restart();
-  }).catch(function () {
-    caption.textContent = 'Could not load images. Check your connection and tap to retry.';
+    setFavs(favs);
+    paintFavBtn();
   });
+  var overlay = document.getElementById('favOverlay');
+  function openFavs() {
+    var favs = getFavs(), grid = document.getElementById('favGrid');
+    grid.innerHTML = '';
+    document.getElementById('favEmpty').style.display = favs.length ? 'none' : 'block';
+    favs.forEach(function (f) {
+      var d = document.createElement('div');
+      d.className = 'favcard';
+      var im = document.createElement('img'); im.src = f.img; im.alt = '';
+      var p = document.createElement('p'); p.textContent = f.caption;
+      d.appendChild(im); d.appendChild(p);
+      d.addEventListener('click', function () {
+        var idx = -1;
+        for (var i = 0; i < allItems.length; i++) { if (allItems[i].img === f.img) { idx = i; break; } }
+        closeFavs();
+        if (idx >= 0) {
+          cat = 'All';
+          pool = allItems.map(function (_, i) { return i; });
+          order = pool.map(function (_, i) { return i; });
+          pos = idx;
+          buildChips();
+          render(cur());
+        }
+      });
+      grid.appendChild(d);
+    });
+    overlay.classList.add('open');
+    paused = true;
+  }
+  function closeFavs() { overlay.classList.remove('open'); paused = false; shownAt = performance.now(); }
+  document.getElementById('favListBtn').addEventListener('click', function (e) { e.stopPropagation(); openFavs(); });
+  document.getElementById('favClose').addEventListener('click', function (e) { e.stopPropagation(); closeFavs(); });
 
-  /* --- music: public domain, starts on first tap (iOS requires a gesture) --- */
+  /* music */
   var bgm = document.getElementById('bgm');
   var musicBtn = document.getElementById('musicBtn');
-  bgm.volume = 0.55;
   var musicWanted = (localStorage.getItem('earth-music') !== 'off');
-  function paintBtn() { musicBtn.textContent = (!bgm.paused) ? '🔊' : '🔇'; }
+  function paintBtn() { musicBtn.textContent = bgm.paused ? '🔇' : '🔊'; }
+  function fadeInVolume() {
+    bgm.volume = 0;
+    var v = 0;
+    var iv = setInterval(function () {
+      v += 0.05;
+      if (v >= 0.5) { v = 0.5; clearInterval(iv); }
+      bgm.volume = v;
+    }, 90);
+  }
   function tryPlay() {
     if (!musicWanted) return;
     var pr = bgm.play();
-    if (pr && pr.then) { pr.then(paintBtn).catch(paintBtn); }
+    if (pr && pr.then) { pr.then(function () { fadeInVolume(); paintBtn(); }).catch(paintBtn); }
   }
   document.body.addEventListener('pointerdown', function () { tryPlay(); }, { once: true });
   musicBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    if (bgm.paused) {
-      musicWanted = true;
-      localStorage.setItem('earth-music', 'on');
-      tryPlay();
-    } else {
-      musicWanted = false;
-      localStorage.setItem('earth-music', 'off');
-      bgm.pause();
-      paintBtn();
-    }
+    if (bgm.paused) { musicWanted = true; localStorage.setItem('earth-music', 'on'); tryPlay(); }
+    else { musicWanted = false; localStorage.setItem('earth-music', 'off'); bgm.pause(); paintBtn(); }
   });
   bgm.addEventListener('play', paintBtn);
   bgm.addEventListener('pause', paintBtn);
 
+  /* your own track (stored only on this device) */
+  var dbPromise = new Promise(function (res, rej) {
+    var rq = indexedDB.open('earth-db', 1);
+    rq.onupgradeneeded = function () { rq.result.createObjectStore('kv'); };
+    rq.onsuccess = function () { res(rq.result); };
+    rq.onerror = function () { rej(rq.error); };
+  });
+  function idbSet(key, val) {
+    return dbPromise.then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(val, key);
+        tx.oncomplete = res; tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function idbGet(key) {
+    return dbPromise.then(function (db) {
+      return new Promise(function (res, rej) {
+        var rq = db.transaction('kv', 'readonly').objectStore('kv').get(key);
+        rq.onsuccess = function () { res(rq.result); };
+        rq.onerror = function () { rej(rq.error); };
+      });
+    });
+  }
+  function idbDel(key) {
+    return dbPromise.then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').delete(key);
+        tx.oncomplete = res; tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  var customURL = null;
+  function setCustomTrack(blob, name) {
+    if (customURL) URL.revokeObjectURL(customURL);
+    customURL = URL.createObjectURL(blob);
+    bgm.src = customURL;
+    musicWanted = true;
+    localStorage.setItem('earth-music', 'on');
+    tryPlay();
+    if (name) toast('Your track: ' + name);
+  }
+  idbGet('track').then(function (blob) { if (blob) setCustomTrack(blob, null); }).catch(function () {});
+  var picker = document.getElementById('filePicker');
+  picker.addEventListener('change', function () {
+    var f = picker.files && picker.files[0];
+    if (!f) return;
+    idbSet('track', f).catch(function () {});
+    setCustomTrack(f, f.name);
+    picker.value = '';
+  });
+  var customBtn = document.getElementById('customBtn');
+  var pressTimer = null, longPressed = false;
+  customBtn.addEventListener('pointerdown', function () {
+    longPressed = false;
+    pressTimer = setTimeout(function () {
+      longPressed = true;
+      idbDel('track').catch(function () {});
+      if (customURL) { URL.revokeObjectURL(customURL); customURL = null; }
+      bgm.src = 'music.mp3';
+      toast('Back to the built-in track');
+      if (musicWanted) tryPlay();
+    }, 700);
+  });
+  customBtn.addEventListener('pointerup', function () { clearTimeout(pressTimer); });
+  customBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (longPressed) { longPressed = false; return; }
+    picker.click();
+  });
+
+  /* theme */
+  var themeBtn = document.getElementById('themeBtn');
+  function paintTheme() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#101418' : '#ffffff');
+  }
+  var savedTheme = localStorage.getItem('earth-theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  paintTheme();
+  themeBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    localStorage.setItem('earth-theme', dark ? 'light' : 'dark');
+    paintTheme();
+  });
+
+  /* share */
+  document.getElementById('shareBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!pool.length) return;
+    var item = cur(), url = articleURL(item);
+    if (navigator.share) {
+      navigator.share({ title: 'Earth loading screen', text: item.caption, url: url }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { toast('Article link copied'); });
+    }
+  });
+
+  /* navigation */
+  document.getElementById('prevBtn').addEventListener('click', function (e) { e.stopPropagation(); step(-1); });
+  document.getElementById('nextBtn').addEventListener('click', function (e) { e.stopPropagation(); step(1); });
   document.body.addEventListener('click', function (e) {
-    if (e.target.closest && (e.target.closest('a') || e.target.closest('#musicBtn'))) return;
-    advance();
+    if (e.target.closest && (e.target.closest('a') || e.target.closest('button') || e.target.closest('#favOverlay'))) return;
+    step(1);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); step(1); }
+    if (e.key === 'ArrowLeft') step(-1);
+  });
+  var touchX = null;
+  document.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) > 48) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  /* boot */
+  fetch('figures.json?rev=4').then(function (r) { return r.json(); }).then(function (data) {
+    allItems = data;
+    setFavs(getFavs());
+    setCategory('All');
+    /* open on the pelican, like the trend's hero frame */
+    var p = -1;
+    for (var i = 0; i < order.length; i++) {
+      if ((at(i).caption || '').indexOf('brown pelican') !== -1) { p = i; break; }
+    }
+    if (p > 0) { pos = p; render(cur()); }
+    shownAt = performance.now();
+    requestAnimationFrame(tick);
+  }).catch(function () {
+    caption.textContent = 'Could not load images. Check your connection and tap to retry.';
   });
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
