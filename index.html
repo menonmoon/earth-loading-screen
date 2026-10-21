@@ -122,7 +122,7 @@
   }
   function restart() { clearInterval(timer); timer = setInterval(advance, 5200); }
 
-  fetch('figures.json').then(function (r) { return r.json(); }).then(function (data) {
+  fetch('figures.json?rev=3').then(function (r) { return r.json(); }).then(function (data) {
     items = data;
     order = shuffle(items.map(function (_, i) { return i; }));
     var p = -1;
