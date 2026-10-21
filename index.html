@@ -28,18 +28,19 @@
   figure.thumb {
     border:1px solid var(--border); background:var(--thumb-bg);
     padding:4px; width:min(86vw, 342px);
-    transition:opacity .35s ease;
   }
-  figure.thumb.fading { opacity:0; }
-  figure.thumb img.photo {
-    display:block; width:100%; height:auto; max-height:46vh; object-fit:cover;
+  .photobox {
+    position:relative; width:100%; aspect-ratio:4/3; overflow:hidden;
     border:1px solid var(--border); background:#eaecf0;
-    transition:opacity .3s ease;
   }
-  body.is-loading figure.thumb img.photo { opacity:.45; }
+  .photobox img {
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity .8s ease;
+  }
+  .photobox img.show { opacity:1; }
   figcaption {
     padding:5px 2px 1px; font-size:13.5px; line-height:1.45; color:var(--ink);
-    overflow-wrap:break-word;
+    overflow-wrap:break-word; transition:opacity .3s ease;
   }
   figcaption a { color:var(--link); text-decoration:none; }
   figcaption .magnify { float:right; margin:2px 0 0 6px; opacity:.55; }
@@ -59,13 +60,25 @@
     font-size:10.5px; color:#72777d; z-index:5;
   }
   .credit a { color:#72777d; text-decoration:none; }
+  #musicBtn {
+    position:fixed; top:calc(12px + env(safe-area-inset-top)); right:12px; z-index:6;
+    width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--border); background:#ffffff; color:#54595d;
+    font-size:17px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
 </style>
 </head>
 <body>
   <figure class="thumb" id="card">
-    <img class="photo" id="photo" alt="">
+    <div class="photobox">
+      <img id="photoA" class="show" alt="">
+      <img id="photoB" alt="">
+    </div>
     <figcaption id="caption"></figcaption>
   </figure>
+
+  <button id="musicBtn" aria-label="Toggle music">🔇</button>
 
   <div class="loading-mark" aria-hidden="true">
     <img src="globe.jpg" alt="">
@@ -73,14 +86,16 @@
   </div>
   <div class="credit">Images &amp; captions · <a href="https://en.wikipedia.org/wiki/Earth">Wikipedia</a></div>
 
+  <audio id="bgm" src="music.mp3" loop preload="auto"></audio>
+
 <script>
   var WORDS = ["Loading","Laden","Chargement","Cargando","Caricamento","Carregando","Загрузка","読み込み中","로딩 중","加载中","تحميل","Ładowanie"];
-  var card = document.getElementById('card');
-  var photo = document.getElementById('photo');
   var caption = document.getElementById('caption');
   var loadword = document.getElementById('loadword');
+  var layers = [document.getElementById('photoA'), document.getElementById('photoB')];
+  var front = 0;
   var MAGNIFY = '<span class="magnify"><svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="#54595d" stroke-width="1.2"><rect x="4" y="0.5" width="10.5" height="10"/><path d="M0.5 3.5 H4 M0.5 7.5 H4 M0.5 3.5 V7.5"/></svg></span>';
-  var items = [], order = [], pos = 0, timer = null, wi = 0;
+  var items = [], order = [], pos = 0, timer = null, wi = 0, busy = false;
 
   function fixLinks(html) {
     return html
@@ -95,32 +110,55 @@
     }
     return a;
   }
-  function current() { return items[order[pos % order.length]]; }
-  function upcoming() { return items[order[(pos + 1) % order.length]]; }
-  function render(item) {
-    photo.src = item.img;
-    photo.alt = item.caption || '';
-    caption.innerHTML = MAGNIFY + fixLinks(item.caption_html);
-  }
+  function itemAt(p) { return items[order[p % order.length]]; }
   function preload(item) { var im = new Image(); im.src = item.img; }
 
+  function setCaption(item) {
+    caption.style.opacity = '0';
+    setTimeout(function () {
+      caption.innerHTML = MAGNIFY + fixLinks(item.caption_html);
+      caption.style.opacity = '1';
+    }, 300);
+  }
+
+  function showItem(p, instant) {
+    var item = itemAt(p);
+    var back = layers[1 - front];
+    var frontEl = layers[front];
+    back.src = item.img;
+    back.alt = item.caption || '';
+    var swap = function () {
+      back.classList.add('show');
+      frontEl.classList.remove('show');
+      front = 1 - front;
+      setCaption(item);
+      preload(itemAt(p + 1));
+    };
+    if (instant) { swap(); return; }
+    if (back.decode) {
+      back.decode().then(swap).catch(swap);
+    } else {
+      back.onload = swap;
+      back.onerror = swap;
+    }
+  }
+
   function advance() {
-    if (!items.length) return;
+    if (!items.length || busy) return;
+    busy = true;
     document.body.classList.add('is-loading');
     wi = (wi + 1) % WORDS.length;
     loadword.textContent = WORDS[wi] + '…';
-    card.classList.add('fading');
+    pos++;
+    if (pos % order.length === 0) { order = shuffle(order.slice()); pos = 0; }
+    showItem(pos, false);
     setTimeout(function () {
-      pos++;
-      if (pos % order.length === 0) { order = shuffle(order.slice()); pos = 0; }
-      render(current());
-      preload(upcoming());
-      card.classList.remove('fading');
-      setTimeout(function () { document.body.classList.remove('is-loading'); }, 350);
-    }, 380);
+      document.body.classList.remove('is-loading');
+      busy = false;
+    }, 900);
     restart();
   }
-  function restart() { clearInterval(timer); timer = setInterval(advance, 5200); }
+  function restart() { clearInterval(timer); timer = setInterval(advance, 6000); }
 
   fetch('figures.json?rev=3').then(function (r) { return r.json(); }).then(function (data) {
     items = data;
@@ -129,16 +167,43 @@
     for (var i = 0; i < items.length; i++) {
       if ((items[i].caption || '').indexOf('brown pelican') !== -1) { p = i; break; }
     }
-    if (p > 0) { order = [p].concat(order.filter(function (x) { return x !== p; })); }
-    render(current());
-    preload(upcoming());
+    if (p > 0) { order = [p].concat(order.filter(function (x) { return x !== p; })); pos = 0; }
+    showItem(0, true);
     restart();
   }).catch(function () {
     caption.textContent = 'Could not load images. Check your connection and tap to retry.';
   });
 
+  /* --- music: public domain, starts on first tap (iOS requires a gesture) --- */
+  var bgm = document.getElementById('bgm');
+  var musicBtn = document.getElementById('musicBtn');
+  bgm.volume = 0.55;
+  var musicWanted = (localStorage.getItem('earth-music') !== 'off');
+  function paintBtn() { musicBtn.textContent = (!bgm.paused) ? '🔊' : '🔇'; }
+  function tryPlay() {
+    if (!musicWanted) return;
+    var pr = bgm.play();
+    if (pr && pr.then) { pr.then(paintBtn).catch(paintBtn); }
+  }
+  document.body.addEventListener('pointerdown', function () { tryPlay(); }, { once: true });
+  musicBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (bgm.paused) {
+      musicWanted = true;
+      localStorage.setItem('earth-music', 'on');
+      tryPlay();
+    } else {
+      musicWanted = false;
+      localStorage.setItem('earth-music', 'off');
+      bgm.pause();
+      paintBtn();
+    }
+  });
+  bgm.addEventListener('play', paintBtn);
+  bgm.addEventListener('pause', paintBtn);
+
   document.body.addEventListener('click', function (e) {
-    if (e.target.closest && e.target.closest('a')) return;
+    if (e.target.closest && (e.target.closest('a') || e.target.closest('#musicBtn'))) return;
     advance();
   });
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
